@@ -1,0 +1,100 @@
+config:
+  target: "https://your-app.vercel.app"  # 배포된 URL로 변경
+  phases:
+    # Phase 1: 워밍업 - 10명이 10초동안 접속
+    - duration: 10
+      arrivalRate: 1
+      name: "Warm up"
+
+    # Phase 2: 점진적 증가 - 30초동안 100명까지
+    - duration: 30
+      arrivalRate: 3
+      rampTo: 10
+      name: "Ramp up to 100 users"
+
+    # Phase 3: 피크 부하 - 60초동안 200명 동시 접속
+    - duration: 60
+      arrivalRate: 20
+      name: "Peak load - 200 concurrent users"
+
+    # Phase 4: 안정화 - 30초동안 감소
+    - duration: 30
+      arrivalRate: 5
+      name: "Cool down"
+
+  # HTTP 설정
+  http:
+    timeout: 10
+
+  # 성능 임계값
+  ensure:
+    maxErrorRate: 5  # 에러율 5% 미만
+    p95: 3000        # 95%의 요청이 3초 이내
+    p99: 5000        # 99%의 요청이 5초 이내
+
+scenarios:
+  - name: "참여자 투표 시나리오"
+    weight: 70  # 전체 트래픽의 70%
+    flow:
+      # 1. 메인 페이지 접속
+      - get:
+          url: "/"
+          capture:
+            - json: "$.presentations"
+              as: "presentations"
+
+      # 2. 세션 생성
+      - post:
+          url: "/api/session"
+          json: {}
+          capture:
+            - json: "$.sessionId"
+              as: "sessionId"
+
+      # 3. 발표 목록 조회
+      - get:
+          url: "/api/presentations"
+
+      # 4. 3초 대기 (사용자가 읽는 시간)
+      - think: 3
+
+      # 5. 첫 번째 발표에 투표 (1-5점 랜덤)
+      - post:
+          url: "/api/votes"
+          json:
+            sessionId: "{{ sessionId }}"
+            presentationId: 1
+            rating: "{{ $randomNumber(1, 5) }}"
+
+      # 6. 2초 대기
+      - think: 2
+
+      # 7. 두 번째 발표에 투표
+      - post:
+          url: "/api/votes"
+          json:
+            sessionId: "{{ sessionId }}"
+            presentationId: 2
+            rating: "{{ $randomNumber(1, 5) }}"
+
+      # 8. 내 투표 조회
+      - get:
+          url: "/api/votes/{{ sessionId }}"
+
+  - name: "관리자 대시보드 조회"
+    weight: 30  # 전체 트래픽의 30%
+    flow:
+      # 1. 통계 조회
+      - get:
+          url: "/api/admin/stats"
+          headers:
+            Authorization: "Bearer admin2024"
+
+      # 2. 5초 대기
+      - think: 5
+
+      # 3. 전체 투표 내역 조회
+      - get:
+          url: "/api/admin/all-votes"
+          headers:
+            Authorization: "Bearer admin2024"
