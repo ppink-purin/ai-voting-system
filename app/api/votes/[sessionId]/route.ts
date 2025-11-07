@@ -3,9 +3,9 @@ import { db } from '@/lib/db';
 
 export async function GET(
   request: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  const sessionId = params.sessionId;
+  const { sessionId } = await params;
 
   const user = await db.getUser(sessionId);
   if (!user) {

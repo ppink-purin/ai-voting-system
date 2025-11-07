@@ -251,7 +251,7 @@ export default function AdminDashboard() {
                     <td className="p-3 text-sm">
                       {vote.votes
                         .sort((a, b) => a.presentationId - b.presentationId)
-                        .map((v) => `#${v.presentationId}: ${v}★`)
+                        .map((v) => `#${v.presentationId}: ${v.rating}★`)
                         .join(', ')}
                     </td>
                   </tr>
