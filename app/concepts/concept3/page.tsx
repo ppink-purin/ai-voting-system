@@ -255,7 +255,7 @@ export default function Concept3() {
 
       {/* Fixed submit button */}
       {votingActive && !hasVoted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg px-8 py-6">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg px-8 py-6">
           <div className="max-w-5xl mx-auto">
             <button
               onClick={handleSubmit}

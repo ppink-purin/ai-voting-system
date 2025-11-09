@@ -273,7 +273,7 @@ export default function Concept4() {
 
       {/* Fixed submit button */}
       {votingActive && !hasVoted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t-4 border-purple-400 shadow-2xl p-6">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t-4 border-purple-400 shadow-2xl p-6">
           <div className="max-w-4xl mx-auto">
             <button
               onClick={handleSubmit}

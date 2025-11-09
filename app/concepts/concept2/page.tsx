@@ -315,7 +315,7 @@ export default function Concept2() {
 
       {/* Fixed submit button */}
       {votingActive && !hasVoted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-sm border-t border-cyan-500/30 p-6"
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-t border-cyan-500/30 p-6"
              style={{ boxShadow: '0 -4px 30px rgba(34, 211, 238, 0.2)' }}>
           <div className="max-w-4xl mx-auto">
             <button

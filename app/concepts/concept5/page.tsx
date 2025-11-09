@@ -290,7 +290,7 @@ export default function Concept5() {
 
       {/* Fixed submit button */}
       {votingActive && !hasVoted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-2xl p-6 border-t-2 border-slate-200">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-2xl p-6 border-t-2 border-slate-200">
           <div className="max-w-4xl mx-auto">
             <button
               onClick={handleSubmit}
