@@ -41,13 +41,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user exists
-    const user = await db.getUser(sessionId);
+    // Check if user exists, create if not (Vercel serverless environment)
+    let user = await db.getUser(sessionId);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid session' },
-        { status: 404 }
-      );
+      // 서버리스 환경에서 세션이 없으면 자동 생성
+      user = await db.createUser(sessionId);
     }
 
     // Save votes
