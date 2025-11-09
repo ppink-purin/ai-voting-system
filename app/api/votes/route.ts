@@ -4,19 +4,12 @@ import { db } from '@/lib/db';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { sessionId, presentationId, rating } = body;
+    const { sessionId, selectedPresentationIds, configTimestamp } = body;
 
     // Validation
-    if (!sessionId || !presentationId || rating === undefined) {
+    if (!sessionId || !selectedPresentationIds || !Array.isArray(selectedPresentationIds)) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    if (rating < 1 || rating > 5) {
-      return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
         { status: 400 }
       );
     }
@@ -30,6 +23,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get config to validate selection count
+    const config = await db.getConfig();
+
+    // Check if config has changed since page load
+    if (configTimestamp && configTimestamp !== config.lastConfigUpdate) {
+      return NextResponse.json(
+        { error: 'Config changed', requireReload: true },
+        { status: 409 }
+      );
+    }
+
+    if (selectedPresentationIds.length !== config.requiredSelections) {
+      return NextResponse.json(
+        { error: `정확히 ${config.requiredSelections}개의 팀을 선택해야 합니다` },
+        { status: 400 }
+      );
+    }
+
     // Check if user exists
     const user = await db.getUser(sessionId);
     if (!user) {
@@ -39,8 +50,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save vote
-    await db.saveVote(sessionId, presentationId, rating);
+    // Save votes
+    await db.saveVotes(sessionId, selectedPresentationIds);
 
     return NextResponse.json({ success: true });
   } catch (error) {

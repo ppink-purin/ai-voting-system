@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { checkAdminAuth } from '@/lib/auth';
-import presentations from '@/data/presentations.json';
+import defaultPresentations from '@/data/presentations.json';
 
 export async function GET(request: Request) {
   // Check admin authentication
@@ -11,23 +11,40 @@ export async function GET(request: Request) {
 
   const stats = await db.getStats();
   const votingActive = await db.getVotingStatus();
+  const config = await db.getConfig();
 
-  // Merge with presentation data
-  const presentationStatsWithNames = stats.presentationStats.map(stat => {
-    const presentation = presentations.presentations.find(p => p.id === stat.presentationId);
+  // 초기 로딩 시 JSON 파일 데이터로 초기화
+  if (config.presentations.length === 0) {
+    await db.updatePresentations(defaultPresentations.presentations);
+  }
+
+  const updatedConfig = await db.getConfig();
+
+  // Create a map of presentationId to selectionCount
+  const voteCountMap = new Map<number, number>();
+  stats.presentationStats.forEach(stat => {
+    voteCountMap.set(stat.presentationId, stat.selectionCount);
+  });
+
+  // Include ALL presentations from updatedConfig, with 0 votes if not voted for
+  const presentationStatsWithNames = updatedConfig.presentations.map(presentation => {
     return {
-      ...stat,
-      teamName: presentation?.teamName || 'Unknown',
-      title: presentation?.title || 'Unknown',
+      presentationId: presentation.id,
+      teamName: presentation.teamName,
+      title: presentation.title,
+      selectionCount: voteCountMap.get(presentation.id) || 0,
     };
   });
 
-  // Sort by average rating descending
-  presentationStatsWithNames.sort((a, b) => b.averageRating - a.averageRating);
+  // Sort by selection count descending
+  presentationStatsWithNames.sort((a, b) => b.selectionCount - a.selectionCount);
 
   return NextResponse.json({
     totalUsers: stats.totalUsers,
     votingActive,
+    requiredSelections: updatedConfig.requiredSelections,
     presentations: presentationStatsWithNames,
+    selectedTheme: updatedConfig.selectedTheme,
+    randomTheme: updatedConfig.randomTheme,
   });
 }
